@@ -20,7 +20,7 @@ thread so IO does not block the main thread for all events. The sync
 option allows it to run in different durability modes supported by
 SQLite. See http://www.sqlite.org/pragma.html#pragma_synchronous for
 more details. SQLite uses a temp directory for some operations, so if
-using an disk backed SQLIte database, this should be configured to the
+using an disk backed SQLite database, this should be configured to the
 same filesystem the index file lives on. This will prevent errors where
 the filesystem that the tmpdir is on fills up and causes the database to
 not be able to complete requests.'''
