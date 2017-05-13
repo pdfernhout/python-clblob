@@ -175,12 +175,40 @@ var queued_status = [];
 var replica_usage = {};
 var replica_timeout = 2000;
 
+var clusters = [];
+var by_ip = {};
+
 function update_config(data) {
     config = data;
+    clusters = config.clblob.client.clusters;
+    
+    for (var cluster = 0; cluster < clusters.length; cluster++) {
+        var buckets = clusters[cluster];
+        for (var bucket = 0; bucket < buckets.length; bucket++) {
+            var replicas = buckets[bucket].replicas;
+            for (var replica = 0; replica < replicas.length; replica++) {
+                var ip = config.clblob.client.replicas[replicas[replica]].ip;
+                var port = config.clblob.client.replicas[replicas[replica]].port;
+                if (!by_ip[ip]) by_ip[ip] = {};
+                by_ip[ip][port] = replicas[replica];
+                refresh_replicas.push(replicas[replica]);
+            }
+        }
+    }
+
+    $('#grid').html(grid());
+    $('#by_ip').html(iterate_sorted_object(by_ip, combine_ips));
+    $('#main').html(main());
+
+    $('div.replica').addClass('hide');
+    $(document).keypress(handle_keypress);
+    refresh();
+
+    m.redraw();
+}
+
+function grid() {
     var grid = '';
-    var main = '';
-    var by_ip = {};
-    var clusters = config.clblob.client.clusters;
 
     grid += '<div class="group">';
     for (var cluster = 0; cluster < clusters.length; cluster++) {
@@ -190,26 +218,12 @@ function update_config(data) {
             '</div>' +
             '<div class="group">';
 
-        main += '<div id="cluster_' + cluster + '" class="cluster">' +
-            '<div class="group">' +
-            '<div class="name"><b>cluster ' + cluster + '</b></div>' +
-            '</div>';
-
         var buckets = clusters[cluster];
         for (var bucket = 0; bucket < buckets.length; bucket++) {
             grid += '<div class="grid_bucket">' +
                 '<div class="grid_bucket_number">' + bucket + '</div>';
 
-            main += '<div id="bucket_' + cluster + '_' + bucket +
-                '" class="bucket">' +
-                '<div class="group clickable" onclick="' +
-                '$(this).siblings(\'div.replica\').toggleClass(\'hide\');">' +
-                '<div class="name"><b>bucket ' + bucket + '</b></div>' +
-                metric('write weight', buckets[bucket].write_weight, 0, 0,
-                    null, 0);
-
             var replicas = buckets[bucket].replicas;
-            var replica_main = '';
             for (var replica = 0; replica < replicas.length; replica++) {
                 grid += hover_help(
                     '<a href="#bucket_' + cluster + '_' + bucket + '" ' +
@@ -219,39 +233,60 @@ function update_config(data) {
                     '<div id="grid_replica_' + replicas[replica] +
                     '" class="grid_replica"></div></a>',
                     replicas[replica]);
-
-                main += '<div class="metric replica_name_' + replicas[replica] +
-                    '"><b>' + replicas[replica] + '</b></div>';
-
-                replica_main += '<div id="replica_' + replicas[replica] +
-                    '" class="replica">' +
-                    '<div class="group">' +
-                    '<div class="name replica_name_' + replicas[replica] +
-                    '"><b>' + replicas[replica] + '</b></div>' +
-                    '</div></div>';
-
-                var ip = config.clblob.client.replicas[replicas[replica]].ip;
-                var port = config.clblob.client.replicas[replicas[replica]].port;
-                if (!by_ip[ip])
-                    by_ip[ip] = {};
-                by_ip[ip][port] = replicas[replica];
-
-                refresh_replicas.push(replicas[replica]);
             }
             grid += '</div>';
-            main += '</div>' + replica_main + '</div>';
         }
         grid += '</div></div>';
-        main += '</div>';
     }
     grid += '</div>';
 
-    $('#grid').html(grid);
-    $('#by_ip').html(iterate_sorted_object(by_ip, combine_ips));
-    $('#main').html(main);
-    $('div.replica').addClass('hide');
-    $(document).keypress(handle_keypress);
-    refresh();
+   return grid;
+}
+
+function main() {
+    var main = '';
+
+    for (var cluster = 0; cluster < clusters.length; cluster++) {
+        main += '<div id="cluster_' + cluster + '" class="cluster">' +
+            '<div class="group">' +
+            '<div class="name"><b>cluster ' + cluster + '</b></div>' +
+            '</div>';
+
+        var buckets = clusters[cluster];
+        for (var bucket = 0; bucket < buckets.length; bucket++) {
+            main += '<div id="bucket_' + cluster + '_' + bucket +
+                '" class="bucket">' +
+                '<div class="group clickable" onclick="' +
+                '$(this).siblings(\'div.replica\').toggleClass(\'hide\');">' +
+                '<div class="name"><b>bucket ' + bucket + '</b></div>' +
+                metric('write weight', buckets[bucket].write_weight, 0, 0,
+                    null, 0);
+
+            var replicas = buckets[bucket].replicas;
+            for (var replica = 0; replica < replicas.length; replica++) {
+                main += '<div class="metric replica_name_' + replicas[replica] +
+                    '"><b>' + replicas[replica] + '</b></div>';
+            }
+            main += replica_main(replicas);
+        }
+        main += '</div>';
+    }
+
+    return main;
+}
+
+function replica_main(replicas) {
+    var replica_main = '';
+
+    for (var replica = 0; replica < replicas.length; replica++) {
+        replica_main += '<div id="replica_' + replicas[replica] +
+            '" class="replica">' +
+            '<div class="group">' +
+            '<div class="name replica_name_' + replicas[replica] +
+            '"><b>' + replicas[replica] + '</b></div>' +
+            '</div></div>';
+    }
+    return '</div>' + replica_main + '</div>';
 }
 
 function combine_ips(ip, ports) {
@@ -835,7 +870,7 @@ function key_help() {
     );
 }
 
-function main() {
+function body() {
     return m("div", [
         m("#header", [
             m("h1", m.trust("&#9774;"), " craigslist blob console"),
@@ -861,6 +896,6 @@ function main() {
         </script>
     </head>
     <body>
-        <script>m.mount(document.body, {view: main});</script>
+        <script>m.mount(document.body, {view: body});</script>
     </body>
 </html>
