@@ -810,6 +810,28 @@ function si_prefix(value, factor) {
 isHelpHidden = true;
 isByIPHidden = true;
 
+function generateHelpDiv() {
+    var help = {
+        b: "Run buffer on visible replicas",
+        B: "Run buffer on all replicas",
+        h: "Hide all replicas",
+        H: "Show all replicas",
+        "i/I": "Toggle ip view",
+        p: "Run purge on visible replicas",
+        P: "Run purge on all replicas",
+        "r or &lt;space&gt": "Refresh visible replicas",
+        R: "Refresh all replicas",
+        s: "Run sync on visible replicas",
+        S: "Run sync on all replicas"
+    };
+
+    return m("#help", { class: isHelpHidden ? "hide" : "nohide" }, 
+        Object.keys(help).map(function (key) {
+            return m("div", m("b", m.trust(key)), " - ", help[key])
+        })
+    );
+}
+
 function main() {
     return m("div", [
         m("#header", [
@@ -826,52 +848,7 @@ function main() {
                 m("b", "by ip")
             ])
         ]),
-        m("#help", { class: isHelpHidden ? "hide" : "nohide" }, [
-            m("div", [
-                m("b", "b"),
-                " - Run buffer on visible replicas"
-            ]),
-            m("div", [
-                m("b", "B"),
-                " - Run buffer on all replicas"
-            ]),
-            m("div", [
-                m("b", "h"),
-                " - Hide all replicas"
-            ]),
-            m("div", [
-                m("b", "H"),
-                " - Show all replicas"
-            ]),
-            m("div", [
-                m("b", "i/I"),
-                " - Toggle ip view"
-            ]),
-            m("div", [
-                m("b", "p"),
-                " - Run purge on visible replicas"
-            ]),
-            m("div", [
-                m("b", "P"),
-                " - Run purge on all replicas"
-            ]),
-            m("div", [
-                m("b", "r or ", m.trust("&lt;space&gt")),
-                " - Refresh visible replicas"
-            ]),
-            m("div", [
-                m("b", "R"),
-                " - Refresh all replicas"
-            ]),
-            m("div", [
-                m("b", "s"),
-                " - Run sync on visible replicas"
-            ]),
-            m("div", [
-                m("b", "S"),
-                " - Run sync on all replicas"
-            ])
-        ]),
+        generateHelpDiv(),
         m("#grid"),
         m("#summary"),
         m("#by_ip", { class: isByIPHidden ? "hide" : "" } ),
