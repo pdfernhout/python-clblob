@@ -195,13 +195,9 @@ function update_config(data) {
     }
 
     $('#by_ip').html(iterate_sorted_object(by_ip, combine_ips));
-    $('#main').html(main());
 
-    $('div.replica').addClass('hide');
     $(document).keypress(handle_keypress);
     refresh();
-
-    m.redraw();
 }
 
 function grid() {
@@ -238,49 +234,52 @@ function grid() {
 }
 
 function main() {
-    var main = '';
-
-    for (var cluster = 0; cluster < clusters.length; cluster++) {
-        main += '<div id="cluster_' + cluster + '" class="cluster">' +
-            '<div class="group">' +
-            '<div class="name"><b>cluster ' + cluster + '</b></div>' +
-            '</div>';
-
-        var buckets = clusters[cluster];
-        for (var bucket = 0; bucket < buckets.length; bucket++) {
-            main += '<div id="bucket_' + cluster + '_' + bucket +
-                '" class="bucket">' +
-                '<div class="group clickable" onclick="' +
-                '$(this).siblings(\'div.replica\').toggleClass(\'hide\');">' +
-                '<div class="name"><b>bucket ' + bucket + '</b></div>' +
-                metric('write weight', buckets[bucket].write_weight, 0, 0,
-                    null, 0);
-
-            var replicas = buckets[bucket].replicas;
-            for (var replica = 0; replica < replicas.length; replica++) {
-                main += '<div class="metric replica_name_' + replicas[replica] +
-                    '"><b>' + replicas[replica] + '</b></div>';
-            }
-            main += replica_main(replicas);
-        }
-        main += '</div>';
-    }
-
-    return main;
+    return clusters.map(function (cluster, clusterIndex) {
+        return m(".cluster#cluster_" + clusterIndex,
+            m(".group",
+                m(".name",
+                    m("b", "cluster " + clusterIndex)
+                )
+            ),
+            cluster.map(function (bucket, bucketIndex) {
+                return m(".bucket#bucket_" + clusterIndex + '_' + bucketIndex,
+                    m(".group.clickable", 
+                        {
+                            onclick: function(event) {
+                                // TODO: store this state in domain not DOM
+                                $(this).siblings('div.replica').toggleClass('hide');
+                            }
+                        }, 
+                        m(".name",
+                            m("b", "bucket " + bucketIndex)
+                        ),
+                        // TODO: Remove this use of m.trust
+                        m.trust(metric('write weight', bucket.write_weight, 0, 0, null, 0)),
+                        bucket.replicas.map(function (replica, replicaIndex) {
+                            return m(".metric#replica_name_" + replica,
+                                m("b", replica)
+                            )
+                        }),
+                    ),
+                    replica_main(bucket.replicas)
+                )
+            })
+        )
+    });
 }
 
 function replica_main(replicas) {
-    var replica_main = '';
-
-    for (var replica = 0; replica < replicas.length; replica++) {
-        replica_main += '<div id="replica_' + replicas[replica] +
-            '" class="replica">' +
-            '<div class="group">' +
-            '<div class="name replica_name_' + replicas[replica] +
-            '"><b>' + replicas[replica] + '</b></div>' +
-            '</div></div>';
-    }
-    return '</div>' + replica_main + '</div>';
+    return replicas.map(function (replica, replicaIndex) {
+        // TODO: Use of css class .hide here is problematical 
+        // since we're relying on vdom not putting it back while jQuery interacts with classes
+        return m(".replica.hide#replica_" + replica,
+            m(".group", 
+                m(".name#replica_name_" + replica,
+                    m("b", replica)
+                )
+            )
+        )
+    });
 }
 
 function combine_ips(ip, ports) {
@@ -873,7 +872,7 @@ function body() {
         m("#header", [
             m("h1", m.trust("&#9774;"), " craigslist blob console"),
             m("a.clickable", {
-                onclick: function() { isHelpHidden = !isHelpHidden; console.log("isHelpHidden", isHelpHidden); },
+                onclick: function() { isHelpHidden = !isHelpHidden; },
             }, [
                 m("b", "shortcuts")
             ]),
@@ -888,7 +887,7 @@ function body() {
         m("#grid", grid()),
         m("#summary"),
         m("#by_ip", { class: isByIPHidden ? "hide" : "" } ),
-        m("#main")
+        m("#main", main())
     ]);
 }
         </script>
