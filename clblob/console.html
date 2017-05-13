@@ -813,7 +813,7 @@ function si_prefix(value, factor) {
 isHelpHidden = true;
 isByIPHidden = true;
 
-function generateHelpDiv() {
+function key_help() {
     var help = {
         b: "Run buffer on visible replicas",
         B: "Run buffer on all replicas",
@@ -851,7 +851,7 @@ function main() {
                 m("b", "by ip")
             ])
         ]),
-        generateHelpDiv(),
+        key_help(),
         m("#grid"),
         m("#summary"),
         m("#by_ip", { class: isByIPHidden ? "hide" : "" } ),
