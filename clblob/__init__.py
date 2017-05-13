@@ -127,7 +127,7 @@ In this structure, there are three tiers of configuration:
   The index position of each item in the cluster list is used as the
   identifier for each **bucket**.
 * Each **bucket** is a dictionary. In this case, each bucket has
-  two key-values. The first is **replaces**, which is a list of replica
+  two key-values. The first is **replicas**, which is a list of replica
   identifiers. The second is a **write_weight** which defines what
   proportion of new writes will go to this bucket.
 
