@@ -158,8 +158,6 @@ div.updating {
         <script src="//unpkg.com/mithril/mithril.js"></script>
         <script>
 
-$(document).ready(get_config);
-
 function get_config() {
     m.request({url: '/_config'}).then(update_config);
 }
@@ -196,7 +194,6 @@ function update_config(data) {
         }
     }
 
-    $('#grid').html(grid());
     $('#by_ip').html(iterate_sorted_object(by_ip, combine_ips));
     $('#main').html(main());
 
@@ -208,39 +205,36 @@ function update_config(data) {
 }
 
 function grid() {
-    var grid = '';
-
-    grid += '<div class="group">';
-    for (var cluster = 0; cluster < clusters.length; cluster++) {
-        grid += '<div class="grid_cluster">' +
-            '<div class="group">' +
-            '<div class="name"><b>cluster ' + cluster + '</b></div>' +
-            '</div>' +
-            '<div class="group">';
-
-        var buckets = clusters[cluster];
-        for (var bucket = 0; bucket < buckets.length; bucket++) {
-            grid += '<div class="grid_bucket">' +
-                '<div class="grid_bucket_number">' + bucket + '</div>';
-
-            var replicas = buckets[bucket].replicas;
-            for (var replica = 0; replica < replicas.length; replica++) {
-                grid += hover_help(
-                    '<a href="#bucket_' + cluster + '_' + bucket + '" ' +
-                    'onclick="$(\'#replica_' + replicas[replica] + '\')' +
-                    '.parent().children(\'div.replica\')' +
-                    '.removeClass(\'hide\');">' +
-                    '<div id="grid_replica_' + replicas[replica] +
-                    '" class="grid_replica"></div></a>',
-                    replicas[replica]);
-            }
-            grid += '</div>';
-        }
-        grid += '</div></div>';
-    }
-    grid += '</div>';
-
-   return grid;
+    return m(".group",
+        clusters.map(function (cluster, clusterIndex) {
+            return m(".grid_cluster", 
+                m(".group", 
+                    m(".name", m("b", "cluster ", clusterIndex))
+                ),
+                m(".group", 
+                    cluster.map(function (bucket, bucketIndex) {
+                        return m(".grid_bucket", 
+                            m(".grid_bucket_number", bucketIndex),
+                            bucket.replicas.map(function (replica, replicaIndex) {
+                                return m_hover_help(
+                                    m("a", 
+                                        {
+                                            href: "#bucket_" + clusterIndex + '_' + bucketIndex,
+                                            onclick: function() {
+                                                // TODO: Store open/close state in domain not DOM
+                                                $('#replica_' + replica).parent().children('div.replica').removeClass('hide');
+                                            }
+                                        }, 
+                                        m(".grid_replica#grid_replica_" + replica)
+                                    ),
+                                    replica
+                                )
+                        }))
+                    })
+                )
+            )
+        })
+    );
 }
 
 function main() {
@@ -775,6 +769,10 @@ function hover_help(content, help_text) {
         '<div class="hover_help">' + help_text + '</div></span>';
 }
 
+function m_hover_help(content, help_text) {
+    return m("span.hover_help_wrapper", content, m(".hover_help", help_text));
+}
+
 function iterate_sorted_object(key_values, callback) {
     var keys = [];
     var key;
@@ -887,7 +885,7 @@ function body() {
             ])
         ]),
         key_help(),
-        m("#grid"),
+        m("#grid", grid()),
         m("#summary"),
         m("#by_ip", { class: isByIPHidden ? "hide" : "" } ),
         m("#main")
@@ -896,6 +894,6 @@ function body() {
         </script>
     </head>
     <body>
-        <script>m.mount(document.body, {view: body});</script>
+        <script>m.mount(document.body, {view: body}); get_config();</script>
     </body>
 </html>
