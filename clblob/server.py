@@ -30,7 +30,7 @@ requests independently (and asynchronously) from the client's processing
 of requests.
 
 Beyond the blob and admin methods of the client instance, the server
-also supportes retreiving the config object for this server, as well
+also supports retrieving the config object for this server, as well
 as a console page. The html diagnostic and admin console lives in
 **console.html**. It is simply a web page frontend that uses AJAX requests
 to query status information for each replica using the same HTTP calls that
