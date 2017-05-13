@@ -155,12 +155,13 @@ div.updating {
 
         </style>
         <script src="_jquery.js"></script>
+        <script src="//unpkg.com/mithril/mithril.js"></script>
         <script>
 
 $(document).ready(get_config);
 
 function get_config() {
-    $.getJSON('/_config', update_config);
+    m.request({url: '/_config'}).then(update_config);
 }
 
 var config;
@@ -806,34 +807,80 @@ function si_prefix(value, factor) {
     return (Math.round(value * adjust) / adjust) + prefix;
 }
 
+isHelpHidden = true;
+isByIPHidden = true;
+
+function main() {
+    return m("div", [
+        m("#header", [
+            m("h1", m.trust("&#9774;"), " craigslist blob console"),
+            m("a.clickable", {
+                onclick: function() { isHelpHidden = !isHelpHidden; console.log("isHelpHidden", isHelpHidden); },
+            }, [
+                m("b", "shortcuts")
+            ]),
+            " - ",
+            m("a.clickable", {
+                onclick: function() { isByIPHidden = !isByIPHidden; },
+            }, [
+                m("b", "by ip")
+            ])
+        ]),
+        m("#help", { class: isHelpHidden ? "hide" : "nohide" }, [
+            m("div", [
+                m("b", "b"),
+                " - Run buffer on visible replicas"
+            ]),
+            m("div", [
+                m("b", "B"),
+                " - Run buffer on all replicas"
+            ]),
+            m("div", [
+                m("b", "h"),
+                " - Hide all replicas"
+            ]),
+            m("div", [
+                m("b", "H"),
+                " - Show all replicas"
+            ]),
+            m("div", [
+                m("b", "i/I"),
+                " - Toggle ip view"
+            ]),
+            m("div", [
+                m("b", "p"),
+                " - Run purge on visible replicas"
+            ]),
+            m("div", [
+                m("b", "P"),
+                " - Run purge on all replicas"
+            ]),
+            m("div", [
+                m("b", "r or ", m.trust("&lt;space&gt")),
+                " - Refresh visible replicas"
+            ]),
+            m("div", [
+                m("b", "R"),
+                " - Refresh all replicas"
+            ]),
+            m("div", [
+                m("b", "s"),
+                " - Run sync on visible replicas"
+            ]),
+            m("div", [
+                m("b", "S"),
+                " - Run sync on all replicas"
+            ])
+        ]),
+        m("#grid"),
+        m("#summary"),
+        m("#by_ip", { class: isByIPHidden ? "hide" : "" } ),
+        m("#main")
+    ]);
+}
         </script>
     </head>
     <body>
-        <div id="header">
-            <h1>&#9774; craigslist blob console</h1>
-            <a class="clickable" onclick="$('#help').toggleClass('hide');">
-                <b>shortcuts</b>
-            </a> -
-            <a class="clickable" onclick="$('#by_ip').toggleClass('hide');">
-                <b>by ip</b>
-            </a>
-        </div>
-        <div id="help" class="hide">
-            <div><b>b</b> - Run buffer on visible replicas</div>
-            <div><b>B</b> - Run buffer on all replicas</div>
-            <div><b>h</b> - Hide all replicas</div>
-            <div><b>H</b> - Show all replicas</div>
-            <div><b>i/I</b> - Toggle ip view</div>
-            <div><b>p</b> - Run purge on visible replicas</div>
-            <div><b>P</b> - Run purge on all replicas</div>
-            <div><b>r or &lt;space&gt;</b> - Refresh visible replicas</div>
-            <div><b>R</b> - Refresh all replicas</div>
-            <div><b>s</b> - Run sync on visible replicas</div>
-            <div><b>S</b> - Run sync on all replicas</div>
-        </div>
-        <div id="grid"></div>
-        <div id="summary"></div>
-        <div id="by_ip" class="hide"></div>
-        <div id="main"></div>
+        <script>m.mount(document.body, {view: main});</script>
     </body>
 </html>
