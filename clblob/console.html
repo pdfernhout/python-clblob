@@ -521,6 +521,7 @@ function update_status(replica) {
 }
 
 function sync_status_help(status) {
+    var help;
     if (status.indexOf('start delay') === 0)
         return 'Sync has not been run since server start.';
     if (status.indexOf('failed') === 0)
@@ -558,6 +559,7 @@ function sync_status_help(status) {
 }
 
 function purge_status_help(status) {
+    var help;
     if (status.indexOf('start delay') === 0)
         return 'Purge has not been run since server start.';
     if (status.indexOf('failed') === 0)
@@ -580,6 +582,7 @@ function purge_status_help(status) {
 }
 
 function buffer_status_help(status) {
+    var help;
     if (status.indexOf('start delay') === 0)
         return 'Buffer has not been run since server start.';
     if (status.indexOf('failed') === 0)
