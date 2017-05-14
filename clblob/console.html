@@ -157,6 +157,8 @@ div.updating {
         <script src="_jquery.js"></script>
         <script src="//unpkg.com/mithril/mithril.js"></script>
         <script>
+/* global m, $ */
+"use strict";
 
 function get_config() {
     m.request({url: '/_config'}).then(update_config);
@@ -259,7 +261,7 @@ function main() {
                             return m(".metric#replica_name_" + replica,
                                 m("b", replica)
                             )
-                        }),
+                        })
                     ),
                     replica_main(bucket.replicas)
                 )
@@ -295,7 +297,7 @@ function combine_ports(port, replica) {
 
 function foreach_replica(callback, filter) {
     for (var index = 0; index < refresh_replicas.length; index++) {
-        replica = refresh_replicas[index];
+        var replica = refresh_replicas[index];
         if (filter === true) {
             if ($('#replica_' + replica).hasClass('hide'))
                 continue;
@@ -353,7 +355,7 @@ function handle_keypress(event) {
 
 function flush_status() {
     while (running_status < 8) {
-        replica = queued_status.shift();
+        var replica = queued_status.shift();
         if (!replica)
             break;
         running_status++;
@@ -812,8 +814,8 @@ function get_notify_class(value, warning, critical) {
     return '';
 }
 
-SI_PREFIXES_LARGE = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
-SI_PREFIXES_SMALL = ['', 'm', 'u', 'n', 'p', 'f', 'a', 'z', 'y'];
+var SI_PREFIXES_LARGE = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+var SI_PREFIXES_SMALL = ['', 'm', 'u', 'n', 'p', 'f', 'a', 'z', 'y'];
 
 function si_prefix(value, factor) {
     if (factor === null)
@@ -842,8 +844,8 @@ function si_prefix(value, factor) {
     return (Math.round(value * adjust) / adjust) + prefix;
 }
 
-isHelpHidden = true;
-isByIPHidden = true;
+var isHelpHidden = true;
+var isByIPHidden = true;
 
 function key_help() {
     var help = {
@@ -890,9 +892,14 @@ function body() {
         m("#main", main())
     ]);
 }
+
+function start() {
+   m.mount(document.body, {view: body});
+   get_config(); 
+}
         </script>
     </head>
     <body>
-        <script>m.mount(document.body, {view: body}); get_config();</script>
+        <script>/* global start */ start();</script>
     </body>
 </html>
