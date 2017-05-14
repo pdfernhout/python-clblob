@@ -176,27 +176,30 @@ var replica_usage = {};
 var replica_timeout = 2000;
 
 var clusters = [];
-var by_ip = {};
+var allReplicasByName = {};
+var allReplicasByIP = {};
 
 function update_config(data) {
     config = data;
     clusters = config.clblob.client.clusters;
+    allReplicasByName = config.clblob.client.replicas;
     
-    for (var cluster = 0; cluster < clusters.length; cluster++) {
-        var buckets = clusters[cluster];
-        for (var bucket = 0; bucket < buckets.length; bucket++) {
-            var replicas = buckets[bucket].replicas;
-            for (var replica = 0; replica < replicas.length; replica++) {
-                var ip = config.clblob.client.replicas[replicas[replica]].ip;
-                var port = config.clblob.client.replicas[replicas[replica]].port;
-                if (!by_ip[ip]) by_ip[ip] = {};
-                by_ip[ip][port] = replicas[replica];
-                refresh_replicas.push(replicas[replica]);
+    for (var clusterIndex = 0; clusterIndex < clusters.length; clusterIndex++) {
+        var buckets = clusters[clusterIndex];
+        for (var bucketIndex = 0; bucketIndex < buckets.length; bucketIndex++) {
+            var replicasInBucket = buckets[bucketIndex].replicas;
+            for (var replicaIndex = 0; replicaIndex < replicasInBucket.length; replicaIndex++) {
+                var replica = replicasInBucket[replicaIndex];
+                var ip = allReplicasByName[replica].ip;
+                var port = allReplicasByName[replica].port;
+                if (!allReplicasByIP[ip]) allReplicasByIP[ip] = {};
+                allReplicasByIP[ip][port] = replica;
+                refresh_replicas.push(replica);
             }
         }
     }
 
-    $('#by_ip').html(iterate_sorted_object(by_ip, combine_ips));
+    $('#by_ip').html(iterate_sorted_object(allReplicasByIP, combine_ips));
 
     $(document).keypress(handle_keypress);
     refresh();
@@ -454,7 +457,7 @@ function summary_metrics(name, details) {
 
 function update_replica_usage(cluster, bucket) {
     var replica;
-    var replicas = config.clblob.client.clusters[cluster][bucket].replicas;
+    var replicas = clusters[cluster][bucket].replicas;
     var max_usage = 0;
     for (replica = 0; replica < replicas.length; replica++) {
         if (max_usage < replica_usage[replicas[replica]])
@@ -485,8 +488,7 @@ function update_status(replica) {
         running_status--;
         replica_status = 'ok';
         var html = '';
-        var address = config.clblob.client.replicas[replica].ip + ':' +
-            config.clblob.client.replicas[replica].port;
+        var address = allReplicasByName[replica].ip + ':' + allReplicasByName[replica].port;
         html += '<div class="group">';
         html += '<div class="name replica_name_' + replica + '"><b>' +
             replica + '</b></div>';
@@ -724,8 +726,7 @@ function update_status_fail(replica) {
         flush_status();
         running_status--;
         var html = '';
-        var address = config.clblob.client.replicas[replica].ip + ':' +
-            config.clblob.client.replicas[replica].port;
+        var address = allReplicasByName[replica].ip + ':' + allReplicasByName[replica].port;
         html += '<div class="group">' +
             '<div class="name replica_name_' + replica + '"><b>' + replica +
             '</b></div>' +
