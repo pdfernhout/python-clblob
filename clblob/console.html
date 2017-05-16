@@ -627,6 +627,11 @@ function update_status(replica) {
         update_summary();
 
         update_replica_usage(status.cluster, status.bucket);
+
+        // TODO: Remove wastefully throwing away a generated div to ensure maximumWarningSeverity is correct
+        // Otherwise, some labels may have incorrect CSS status because they depend
+        // on maximum warning severity calculations in metric function
+        generate_replica_status_success_div(replica);
     }
 }
 
@@ -682,6 +687,7 @@ function generate_replica_status_success_div(replica) {
         ('store_disk' in status) ? m(".group", store_disk_metrics(replica, status.store_disk)) : []
     ];
 
+    // TODO: Improve so do not habe to store value of global replica_status which may have changed
     updateStateForReplica(replica, {maximumWarningSeverity: replica_status});
     return result;
 }
