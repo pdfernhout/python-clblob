@@ -157,7 +157,9 @@ div.updating {
         <!-- TODO: IMPORTANT For production use, mithril.js should be a local file like jQuery was -->
         <script src="//unpkg.com/mithril/mithril.js"></script>
         <script>
-/* global m */
+/* global m, window, document, location, setTimeout */
+/* jshint sub: true */
+/* jshint -W097 */
 "use strict";
 
 function get_config() {
@@ -401,7 +403,7 @@ function handle_keypress(event) {
 
     // This redraw is needed because this event handler is setup outside of Mithril
     // There are a some key presses that don"t require an redraw, 
-    // but it is cleaer to just always do a redraw for now unless there is a performance issue
+    // but it is clearer to just always do a redraw for now unless there is a performance issue
     setTimeout(m.redraw, 0);
 
     if (event.ctrlKey)
@@ -691,7 +693,7 @@ function generate_replica_status_success_div(replica) {
         ("store_disk" in status) ? m(".group", store_disk_metrics(replica, status.store_disk)) : []
     ];
 
-    // TODO: Improve so do not habe to store value of global replica_status which may have changed
+    // TODO: Improve so do not have to store value of global replica_status which may have changed
     updateStateForReplica(replica, {maximumWarningSeverity: replica_status});
     return result;
 }
