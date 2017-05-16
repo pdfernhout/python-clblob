@@ -154,10 +154,10 @@ div.updating {
 }
 
         </style>
-        <script src="_jquery.js"></script>
+        // TODO: IMPORTANT For production use, mithril.js should be a local file like jQuery was
         <script src="//unpkg.com/mithril/mithril.js"></script>
         <script>
-/* global m, $ */
+/* global m */
 "use strict";
 
 function get_config() {
@@ -282,7 +282,6 @@ function update_config(data) {
         }
     }
 
-    $(document).keypress(handle_keypress);
     refresh();
 }
 
@@ -399,8 +398,12 @@ function foreach_replica(callback, filter) {
 }
 
 function handle_keypress(event) {
-    // TODO: Remove this when full Mithril changeover
+
+    // This redraw is needed because this event handler is setup outside of Mithril
+    // There are a some key presses that don't require an redraw, 
+    // but it is cleaer to just always do a redraw for now unless there is a performance issue
     setTimeout(m.redraw, 0);
+
     if (event.ctrlKey)
         return;
     if (event.which === 104) {
@@ -438,7 +441,13 @@ function handle_keypress(event) {
 
     if (url !== null) {
         foreach_replica(function (replica) {
-            $.ajax({url: url + replica, type: "GET", timeout: replica_timeout, success: m.redraw, error: m.redraw});
+            m.request({
+                url: url + replica, 
+                method: "GET",
+                config: function(xhr) { xhr.timeout = replica_timeout; },
+                // Don't try to convert the result to JSON
+                deserialize: function(value) { return value; }
+            });
         }, filter);
     }
     else
@@ -452,13 +461,13 @@ function flush_status() {
             break;
         running_status++;
         updateStateForReplica(replica, {updating: true});
-        $.ajax({
+        m.request({
             url: '/_status/' + replica,
-            type: "GET",
-            dataType: "json",
-            timeout: replica_timeout,
-            success: update_status(replica),
-            error: update_status_fail(replica)});
+            method: "GET",
+            config: function(xhr) { xhr.timeout = replica_timeout; }
+        })
+        .then(update_status(replica))
+        .catch(update_status_fail(replica));
     }
 }
 
@@ -474,8 +483,14 @@ function refresh(filter) {
         filter);
     flush_status();
     if (!filter) {
-        refresh_timer = window.setTimeout(function () { refresh(); },
-            refresh_auto_ms);
+        refresh_timer = window.setTimeout(
+            function () {
+                refresh();
+                // timeouts need to call m.redraw if they could affect drawable state
+                m.redraw();
+            },
+            refresh_auto_ms
+        );
     }
 }
 
@@ -612,9 +627,6 @@ function update_status(replica) {
         update_summary();
 
         update_replica_usage(status.cluster, status.bucket);
-
-        // TODO: Remove this when full Mithril changeover
-        setTimeout(m.redraw, 0);
     }
 }
 
@@ -867,8 +879,6 @@ function update_status_fail(replica) {
             maximumWarningSeverity: "critical", 
             updating: false
         });
-        // TODO: Remove this when full Mithril changeover
-        setTimeout(m.redraw, 0);
     }
 }
 
@@ -888,7 +898,13 @@ function button(name, url, background) {
     if (background) {
         return m(".button", {
             onclick: function() {
-                $.ajax({url: url, type: 'GET', timeout: replica_timeout, success: m.redraw, error: m.redraw});
+                m.request({
+                    url: url,
+                    method: "GET",
+                    config: function(xhr) { xhr.timeout = replica_timeout; },
+                    // Don't try to convert the result to JSON
+                    deserialize: function(value) { return value; }
+                });
             }
         }, m("b", name));
     }
@@ -1044,6 +1060,7 @@ function body() {
 }
 
 function start() {
+   document.onkeypress = handle_keypress;
    m.mount(document.body, {view: body});
    get_config(); 
 }
