@@ -216,7 +216,7 @@ function updateStateForReplica(replica, newState) {
 }
 
 function updateStateForAllReplicas(newState) {
-    for (let replica in stateForReplica) {
+    for (var replica in stateForReplica) {
         var state = getStateForReplica(replica);
         for (var key in newState) {
             state[key] = newState[key];
@@ -245,7 +245,7 @@ function getStateForBucketReplicas(bucket) {
 function getReplicaLabelCSSClasses(replica) {
     var state = getStateForReplica(replica);
     var severity = "." + state.maximumWarningSeverity;
-    var updating = state.updating ? ".updating" : ""
+    var updating = state.updating ? ".updating" : "";
     return severity + updating;
 }
 
@@ -259,7 +259,7 @@ function getReplicaLabel(replica, type) {
     return m("." + type + ".replica_name_" + replica + getReplicaLabelCSSClasses(replica), 
         m("b", replica, possibleColonForRelativeUsagePercent),
         relativeUsagePercentText
-    )
+    );
 }
 
 function update_config(data) {
@@ -308,11 +308,11 @@ function grid() {
                                         m(".grid_replica#grid_replica_" + replica + getReplicaLabelCSSClasses(replica))
                                     ),
                                     replica
-                                )
-                        }))
+                                );
+                        }));
                     })
                 )
-            )
+            );
         })
     );
 }
@@ -342,9 +342,9 @@ function main() {
                         })
                     ),
                     replica_main(bucket.replicas)
-                )
+                );
             })
-        )
+        );
     });
 }
 
@@ -359,7 +359,7 @@ function replica_main(replicas) {
         } else {
             innerDiv = m(".group", 
                 getReplicaLabel(replica, "name")
-            )
+            );
         }
 
         var state = getStateForReplica(replica);
@@ -367,7 +367,7 @@ function replica_main(replicas) {
         var warningClass = state.requestResult === "error" ? ".warning" : "";
         return m(".replica#replica_" + replica + hideClass + warningClass,
             innerDiv
-        )
+        );
     });
 }
 
@@ -377,7 +377,7 @@ function combine_ips(ip, ports) {
             m(".name", m("b", "ip " + ip)),
             iterate_sorted_object(ports, combine_ports)
         )
-    )
+    );
 }
 
 function combine_ports(port, replica) {
@@ -444,7 +444,7 @@ function handle_keypress(event) {
             m.request({
                 url: url + replica, 
                 method: "GET",
-                config: function(xhr) { xhr.timeout = replica_timeout; },
+                config: configXHRTimeout,
                 // Don't try to convert the result to JSON
                 deserialize: function(value) { return value; }
             });
@@ -452,6 +452,10 @@ function handle_keypress(event) {
     }
     else
         refresh(filter);
+}
+
+function configXHRTimeout(xhr) {
+    xhr.timeout = replica_timeout;
 }
 
 function flush_status() {
@@ -464,7 +468,7 @@ function flush_status() {
         m.request({
             url: '/_status/' + replica,
             method: "GET",
-            config: function(xhr) { xhr.timeout = replica_timeout; }
+            config: configXHRTimeout
         })
         .then(update_status(replica))
         .catch(update_status_fail(replica));
@@ -554,7 +558,7 @@ function update_summary_metrics(name, details) {
         usage: usage,
         total: total,
         count: count
-    }
+    };
 }
 
 function summary_metrics(name, details) {
@@ -588,13 +592,13 @@ function update_replica_usage(cluster, bucket) {
         var relative = (replica_usage[replica] / max_usage) * 100;
 
         var relativeUsagePercent = Math.round(relative);
-        updateStateForReplica(replica, {relativeUsagePercent: relativeUsagePercent})
+        updateStateForReplica(replica, {relativeUsagePercent: relativeUsagePercent});
 
         var severity = getStateForReplica(replica).maximumWarningSeverity;
 
         // If a replica's relativeUsagePercent is lagging behind the other replicas, it may be experiencing issues, so warn
         if (relative < 98 && severity !== "critical") {
-            updateStateForReplica(replica, {maximumWarningSeverity: "warning"})
+            updateStateForReplica(replica, {maximumWarningSeverity: "warning"});
         }
     }
 }
@@ -632,7 +636,7 @@ function update_status(replica) {
         // Otherwise, some labels may have incorrect CSS status because they depend
         // on maximum warning severity calculations in metric function
         generate_replica_status_success_div(replica);
-    }
+    };
 }
 
 function generate_replica_status_success_div(replica) {
@@ -655,7 +659,7 @@ function generate_replica_status_success_div(replica) {
             button('sync', '/_sync/' + replica, true),
             hover_help(
                 metric('sync status', status.sync_status, 0, 0, null, sync_status_severity),
-                sync_status_help(status.sync_status),
+                sync_status_help(status.sync_status)
             ),
 
             button('purge', '/_purge/' + replica, true),
@@ -885,7 +889,7 @@ function update_status_fail(replica) {
             maximumWarningSeverity: "critical", 
             updating: false
         });
-    }
+    };
 }
 
 function generate_replica_status_fail_div(replica) {
@@ -907,7 +911,7 @@ function button(name, url, background) {
                 m.request({
                     url: url,
                     method: "GET",
-                    config: function(xhr) { xhr.timeout = replica_timeout; },
+                    config: configXHRTimeout,
                     // Don't try to convert the result to JSON
                     deserialize: function(value) { return value; }
                 });
@@ -1036,7 +1040,7 @@ function key_help() {
 
     return m("#help", { class: isHelpHidden ? "hide" : "nohide" }, 
         Object.keys(help).map(function (key) {
-            return m("div", m("b", m.trust(key)), " - ", help[key])
+            return m("div", m("b", m.trust(key)), " - ", help[key]);
         })
     );
 }
