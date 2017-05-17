@@ -181,6 +181,7 @@ var replica_timeout = 2000
 var clusters = []
 var allReplicasByName = {}
 var allReplicasByIP = {}
+var summaryAvailable = false;
 
 // stateForReplica stores the last known state for a replica
 // its contents are: 
@@ -533,10 +534,12 @@ var summary = {
 }
 
 function update_summary() {
+    summaryAvailable = true;
     iterate_sorted_object(summary, update_summary_metrics)
 }
 
 function generate_summary_div() {
+    if (!summaryAvailable) return [];
     return m(".group",
         m(".name", m("b", "summary")),
         iterate_sorted_object(summary, summary_metrics)
