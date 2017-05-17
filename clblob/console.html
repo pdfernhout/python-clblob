@@ -472,7 +472,14 @@ function flush_status() {
         m.request({
             url: "/_status/" + replica,
             method: "GET",
-            config: configXHRTimeout
+            config: configXHRTimeout,
+            extract: function(xhr) {
+                // If there is an error, return xhr with its statusText instead of the parsed JSON result
+                if ((xhr.status >= 200 && xhr.status < 300) || xhr.status === 304) {
+                    return JSON.parse(xhr.responseText);
+                }
+                return xhr;
+            }
         })
         .then(update_status(replica))
         .catch(update_status_fail(replica))
